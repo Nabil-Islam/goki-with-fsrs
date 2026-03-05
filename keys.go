@@ -60,6 +60,7 @@ type keyMap struct {
 	Open   key.Binding
 	Easy   key.Binding
 	Good   key.Binding
+	Hard   key.Binding
 	Again  key.Binding
 	Search key.Binding
 	Undo   key.Binding
@@ -102,13 +103,17 @@ func DeckKeyMap() keyMap {
 			key.WithKeys("1"),
 			key.WithHelp("1", "again"),
 		),
-		Good: key.NewBinding(
+		Hard: key.NewBinding(
 			key.WithKeys("2"),
-			key.WithHelp("2", "good"),
+			key.WithHelp("2", "hard"),
+		),
+		Good: key.NewBinding(
+			key.WithKeys("3"),
+			key.WithHelp("3", "good"),
 		),
 		Easy: key.NewBinding(
-			key.WithKeys("3"),
-			key.WithHelp("3", "easy"),
+			key.WithKeys("4"),
+			key.WithHelp("4", "easy"),
 		),
 		Delete: key.NewBinding(
 			key.WithKeys("d"),

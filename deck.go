@@ -1,10 +1,8 @@
 package main
 
 import (
-	"math"
 	"math/rand"
 	"strconv"
-	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -12,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+  fsrs "github.com/open-spaced-repetition/go-fsrs/v4"
 )
 
 type ReviewData struct {
@@ -33,7 +32,7 @@ type Deck struct {
 	numNew      int
 	numLearning int
 	numReview   int
-	numComplete int
+  numRelearning int 
 
 	Name         string     `json:"name"`
 	Json         string     `json:"json"`
@@ -45,7 +44,7 @@ type Deck struct {
 func (d Deck) NumNew() string      { return strconv.Itoa(d.numNew) }
 func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
 func (d Deck) NumReview() string   { return strconv.Itoa(d.numReview) }
-func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
+func (d Deck) NumRelearning() string { return strconv.Itoa(d.numRelearning) }
 
 func (d *Deck) StartReview() {
 	d.reviewData.reviewing = true
@@ -58,20 +57,20 @@ func (d *Deck) StartReview() {
 }
 
 func (d *Deck) UpdateStatus() {
-	d.numNew, d.numLearning, d.numReview, d.numComplete = 0, 0, 0, 0
+	d.numNew, d.numLearning, d.numReview, d.numRelearning = 0, 0, 0, 0
 	temp := []list.Item{}
 	for _, card := range d.Cards.Items() {
 		if card != nil {
 			c := card.(*Card)
-			switch c.Status {
-			case New:
+			switch c.FSRSCard.State {
+			case fsrs.New:
 				d.numNew++
-			case Learning:
+			case fsrs.Learning:
 				d.numLearning++
-			case Review:
+			case fsrs.Review:
 				d.numReview++
-			case Complete:
-				d.numComplete++
+			case fsrs.Relearning:
+				d.numRelearning++
 			}
 			temp = append(temp, c)
 		}
@@ -80,38 +79,22 @@ func (d *Deck) UpdateStatus() {
 }
 
 func (d *Deck) GetReviewCards() []*Card {
-	var (
-		timeNow = time.Now()
+    var reviewCards []*Card
 
-		c           *Card
-		duration    time.Duration
-		minutes     float64
-		reviewCards []*Card
-	)
+    for _, card := range d.Cards.Items() {
+        if card != nil {
+            c := card.(*Card)
+            if c.FSRSCard.State == fsrs.New || IsDue(c) {
+                reviewCards = append(reviewCards, c)
+            }
+        }
+    }
 
-	for _, card := range d.Cards.Items() {
-		if card != nil {
-			c = card.(*Card)
-			if c.Status == New {
-				reviewCards = append(reviewCards, c)
-			} else {
-				duration = timeNow.Sub(c.LastReviewed)
-				minutes = math.Floor(duration.Minutes())
-				if minutes >= float64(c.Interval) {
-					reviewCards = append(reviewCards, c)
-					if c.Status == Complete {
-						c.Status = Review
-					}
-				}
-			}
-		}
-	}
+    rand.Shuffle(len(reviewCards), func(i, j int) {
+        reviewCards[i], reviewCards[j] = reviewCards[j], reviewCards[i]
+    })
 
-	rand.Shuffle(len(reviewCards), func(i, j int) {
-		reviewCards[i], reviewCards[j] = reviewCards[j], reviewCards[i]
-	})
-
-	return reviewCards
+    return reviewCards
 }
 
 func (d *Deck) UpdateReview() {
@@ -217,23 +200,29 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return d.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.Easy):
-			if d.reviewData.complete {
-				d.reviewData.curr.SM2(Easy)
-				d.UpdateReview()
-				d.saveCards()
-			}
+    	if d.reviewData.complete {
+        Review(d.reviewData.curr, fsrs.Easy)  // was SM2(Easy)
+        d.UpdateReview()
+        d.saveCards()
+    	}
 		case key.Matches(msg, d.keyMap.Good):
-			if d.reviewData.complete {
-				d.reviewData.curr.SM2(Good)
-				d.UpdateReview()
-				d.saveCards()
-			}
+    	if d.reviewData.complete {
+        Review(d.reviewData.curr, fsrs.Good)  // was SM2(Good)
+        d.UpdateReview()
+        d.saveCards()
+    	}
+			case key.Matches(msg, d.keyMap.Hard):
+    	if d.reviewData.complete {
+        Review(d.reviewData.curr, fsrs.Hard)  // was SM2(Good)
+        d.UpdateReview()
+        d.saveCards()
+    	}
 		case key.Matches(msg, d.keyMap.Again):
-			if d.reviewData.complete {
-				d.reviewData.curr.SM2(Again)
-				d.UpdateReview()
-				d.saveCards()
-			}
+    	if d.reviewData.complete {
+        Review(d.reviewData.curr, fsrs.Again)  // was SM2(Again)
+        d.UpdateReview()
+        d.saveCards()
+    	}	
 		case key.Matches(msg, d.keyMap.Enter):
 			if d.searching {
 				d.searching = false

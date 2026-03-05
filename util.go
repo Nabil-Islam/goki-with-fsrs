@@ -26,7 +26,7 @@ func updateRows() []table.Row {
 	rows := []table.Row{}
 	for _, deck := range currUser.decks {
 		deck.Cards.Title = deck.Name
-		rows = append(rows, table.Row{deck.Name, deck.NumNew(), deck.NumLearning(), deck.NumReview()})
+		rows = append(rows, table.Row{deck.Name, deck.NumNew(), deck.NumLearning(), deck.NumReview(), deck.NumRelearning()})
 	}
 	return rows
 }
@@ -37,6 +37,7 @@ func initTable() {
 		{Title: "New", Width: 10},
 		{Title: "Learning", Width: 10},
 		{Title: "Review", Width: 10},
+		{Title: "NumRelearning", Width: 10},
 	}
 
 	rows := updateRows()
@@ -182,16 +183,13 @@ func readCards(fileName string) []list.Item {
 	}
 
 	cards := []list.Item{}
-	for _, jsonCard := range jsonCards {
+  for _, jsonCard := range jsonCards {
 		card := Card{
 			Front:        WrapString(jsonCard.Front, 70),
 			Back:         WrapString(jsonCard.Back, 70),
-			Score:        jsonCard.Score,
-			Interval:     jsonCard.Interval,
-			EaseFactor:   jsonCard.EaseFactor,
-			Status:       jsonCard.Status,
-			LastReviewed: jsonCard.LastReviewed,
+			FSRSCard:     jsonCard.FSRSCard,
 		}
+		card.EnsureFSRS()
 		cards = append(cards, &card)
 	}
 

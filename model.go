@@ -30,6 +30,7 @@ func (u *User) Decks() []*Deck {
 	return u.decks
 }
 
+
 func (u *User) UpdateTable() {
 	i := u.table.Cursor()
 	currRows := u.table.Rows()
@@ -40,7 +41,8 @@ func (u *User) UpdateTable() {
 			rows = append(rows, table.Row{u.decks[i].Name,
 				u.decks[i].NumNew(),
 				u.decks[i].NumLearning(),
-				u.decks[i].NumReview()})
+				u.decks[i].NumReview(),
+				u.decks[i].NumRelearning(),})
 		} else if currRows[j] != nil {
 			rows = append(rows, currRows[j])
 		}
