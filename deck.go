@@ -211,7 +211,7 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         d.UpdateReview()
         d.saveCards()
     	}
-			case key.Matches(msg, d.keyMap.Hard):
+		case key.Matches(msg, d.keyMap.Hard):
     	if d.reviewData.complete {
         Review(d.reviewData.curr, fsrs.Hard)  // was SM2(Good)
         d.UpdateReview()
@@ -260,11 +260,11 @@ func (d Deck) View() string {
 	if d.reviewData.reviewing {
 		var sections []string
 
-		front := WrapString(d.reviewData.curr.Front, 40)
+		front := WrapString(RenderContent(d.reviewData.curr.Front), 40)
 		sections = append(sections, front)
 
 		if d.reviewData.complete {
-			back := WrapString(d.reviewData.curr.Back, 40)
+			back := WrapString(RenderContent(d.reviewData.curr.Back), 40)
 			sections = append(sections, answerStyle.Render(back))
 			sections = append(sections, helpKeyColor.Render("Card Difficulty:"))
 			sections = append(sections, lipgloss.NewStyle().Inline(true).Render(d.help.View(d)))

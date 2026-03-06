@@ -24,7 +24,7 @@ func (f Form) FullHelp() [][]key.Binding {
 }
 
 func (d Deck) ShortHelp() []key.Binding {
-	return []key.Binding{d.keyMap.Again, d.keyMap.Good, d.keyMap.Easy}
+	return []key.Binding{d.keyMap.Again, d.keyMap.Hard, d.keyMap.Good, d.keyMap.Easy}
 }
 
 func (d Deck) FullHelp() [][]key.Binding {
